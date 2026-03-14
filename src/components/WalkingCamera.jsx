@@ -12,7 +12,7 @@ import { ROAD_CURVE } from './GhostOrbs'
  * • Free-look via pointer (mouse/touch) clamped to ±45°
  */
 
-const MAX_LOOK_ANGLE = Math.PI / 4  // 45 degrees
+const MAX_LOOK_ANGLE = Math.PI / 3  // 60 degrees for a wider, more natural free-look
 const BOB_AMPLITUDE  = 0.08
 const BOB_FREQUENCY  = 12
 
@@ -79,9 +79,9 @@ export default function WalkingCamera() {
     const targetLookX = pointer.y * MAX_LOOK_ANGLE  // pitch
     const targetLookY = -pointer.x * MAX_LOOK_ANGLE  // yaw
 
-    // Smooth lerp
-    lookX.current += (targetLookX - lookX.current) * 0.06
-    lookY.current += (targetLookY - lookY.current) * 0.06
+    // Smooth lerp for responsive human head feel
+    lookX.current += (targetLookX - lookX.current) * 0.1
+    lookY.current += (targetLookY - lookY.current) * 0.1
 
     // Apply look offsets naturally (like a human head) using YXZ order to completely prevent roll.
     camera.lookAt(ahead)

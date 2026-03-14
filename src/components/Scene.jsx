@@ -22,9 +22,9 @@ function Road() {
     <mesh geometry={tubeGeometry} receiveShadow>
       {/* Inner road surface */}
       <meshStandardMaterial
-        color="#1a1a2a"
-        roughness={0.85}
-        metalness={0.1}
+        color="#636466"
+        roughness={0.9}
+        metalness={0.05}
         side={THREE.BackSide}
       />
     </mesh>
@@ -90,8 +90,8 @@ export default function Scene() {
 
         {/* Ground plane */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -75]} receiveShadow>
-          <planeGeometry args={[30, 160]} />
-          <meshStandardMaterial color="#0c0c18" roughness={1} />
+          <planeGeometry args={[120, 200]} />
+          <meshStandardMaterial color="#223026" roughness={1} />
         </mesh>
       </ScrollControls>
     </>

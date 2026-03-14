@@ -18,26 +18,26 @@ export default function Archway() {
     }
   })
 
-  // Monolithic arch shape
+  // Monolithic arch shape matches "The Threshold" exactly (Flat top, arched hole)
   const archShape = useMemo(() => {
     const shape = new THREE.Shape()
     
-    // Outer boundary (Start bottom left, go up, curve right, go down)
-    shape.moveTo(-6, -0.5)
-    shape.lineTo(-6, 7)
-    shape.quadraticCurveTo(-5, 12, 0, 12)
-    shape.quadraticCurveTo(5, 12, 6, 7)
-    shape.lineTo(6, -0.5)
+    // Outer boundary (Flat giant rectangle)
+    shape.moveTo(-7, -0.5)
+    shape.lineTo(-7, 12)
+    shape.lineTo(7, 12)
+    shape.lineTo(7, -0.5)
     
-    // Inner boundary (Start bottom right, go up, curve left, go down)
-    shape.lineTo(3.5, -0.5)
-    shape.lineTo(3.5, 6)
-    shape.quadraticCurveTo(3, 9, 0, 9)
-    shape.quadraticCurveTo(-3, 9, -3.5, 6)
-    shape.lineTo(-3.5, -0.5)
+    // Inner boundary (Arched tunnel)
+    shape.lineTo(4, -0.5)
+    shape.lineTo(4, 5)
+    // Curve top of the tunnel
+    shape.quadraticCurveTo(4, 8.5, 0, 8.5)
+    shape.quadraticCurveTo(-4, 8.5, -4, 5)
+    shape.lineTo(-4, -0.5)
     
     // Close shape
-    shape.lineTo(-6, -0.5)
+    shape.lineTo(-7, -0.5)
     
     return shape
   }, [])
@@ -68,28 +68,28 @@ export default function Archway() {
       </mesh>
 
       {/* Glowing "KHUSHI'S WORLD" text - engraved flush into the front face */}
-      {/* Front face is exactly at Z=1.0 (since depth is 2 and we offset by -1.0) */}
+      {/* Extrude depth is 2 centered at Z=0 -> face is Z=1.0. Bevel adds 0.15 -> face is Z=1.15. Text must be at 1.16 to be visible! */}
       <Text
-        position={[0, 10.2, 1.01]} // 1.01 sits perfectly flush on the surface
-        fontSize={1.1}             // Larger text matching the concept art
+        position={[0, 10.2, 1.16]} 
+        fontSize={1.2}             // Larger text matching the concept art
         letterSpacing={0.06}
         color="#00ffff"
         anchorX="center"
         anchorY="middle"
-        maxWidth={9}
+        maxWidth={10}
       >
         {"KHUSHI'S WORLD"}
         <meshStandardMaterial
           ref={matRef}
           color="white"
           emissive="#00ffff"
-          emissiveIntensity={3.5}
+          emissiveIntensity={4.5}
           toneMapped={false}
         />
       </Text>
 
       {/* Ambient glow point light to illuminate the dark stone under the text */}
-      <pointLight position={[0, 10.2, 2.5]} intensity={3} color="#00ffff" distance={12} />
+      <pointLight position={[0, 10.2, 2.5]} intensity={4} color="#00ffff" distance={12} />
     </group>
   )
 }
