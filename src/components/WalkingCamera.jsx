@@ -82,14 +82,12 @@ export default function WalkingCamera() {
     lookX.current += (targetLookX - lookX.current) * 0.06
     lookY.current += (targetLookY - lookY.current) * 0.06
 
-    const pitchQ = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(lookX.current, 0, 0, 'YXZ')
-    )
-    const yawQ = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(0, lookY.current, 0, 'YXZ')
-    )
-
-    camera.quaternion.copy(baseQ).multiply(yawQ).multiply(pitchQ)
+    // Apply look offsets naturally (like a human head) using YXZ order to completely prevent roll.
+    camera.lookAt(ahead)
+    const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ')
+    euler.y += lookY.current
+    euler.x += lookX.current
+    camera.quaternion.setFromEuler(euler)
   })
 
   return null

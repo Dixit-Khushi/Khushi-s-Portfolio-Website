@@ -55,9 +55,9 @@ export default function Archway() {
         <boxGeometry args={[1.4, 1.4, 1.4]} />
       </mesh>
 
-      {/* Glowing "KHUSHI'S WORLD" text */}
+      {/* Glowing "KHUSHI'S WORLD" text - engraved into the crossbar */}
       <Text
-        position={[0, 9.8, 0.62]}
+        position={[0, 8.4, 0.61]}
         fontSize={0.85}
         letterSpacing={0.08}
         color="#00ffff"
@@ -76,7 +76,7 @@ export default function Archway() {
       </Text>
 
       {/* Ambient glow point light under arch text */}
-      <pointLight position={[0, 9.5, 1]} intensity={2} color="#00eeff" distance={8} />
+      <pointLight position={[0, 8.4, 1.2]} intensity={2} color="#00ffff" distance={8} />
     </group>
   )
 }

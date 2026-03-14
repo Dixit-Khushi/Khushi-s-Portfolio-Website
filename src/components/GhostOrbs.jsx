@@ -11,12 +11,13 @@ import * as THREE from 'three'
 // so orbs can follow it without prop drilling.
 export const ROAD_CURVE = new THREE.CatmullRomCurve3([
   new THREE.Vector3(0,   0,    0),
-  new THREE.Vector3(4,   0.5, -20),
-  new THREE.Vector3(-3,  1,   -40),
-  new THREE.Vector3(5,   0,   -60),
-  new THREE.Vector3(-4,  0.5, -80),
-  new THREE.Vector3(2,   1,  -100),
-  new THREE.Vector3(-2,  0,  -120),
+  new THREE.Vector3(0,   0,  -16),  // Goes straight through the archway
+  new THREE.Vector3(4,   0.5, -30),
+  new THREE.Vector3(-3,  1,   -45),
+  new THREE.Vector3(5,   0,   -65),
+  new THREE.Vector3(-4,  0.5, -85),
+  new THREE.Vector3(2,   1,  -105),
+  new THREE.Vector3(-2,  0,  -125),
   new THREE.Vector3(0,   0,  -150),
 ])
 
