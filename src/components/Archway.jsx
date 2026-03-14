@@ -17,15 +17,15 @@ export default function Archway() {
     }
   })
 
-  // Stone-like material
+  // Stone-like material matching the dusk aesthetic
   const stoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#4a4a52',
+    color: '#8a8a94',
     roughness: 0.9,
-    metalness: 0.05,
+    metalness: 0.1,
   }), [])
 
   return (
-    <group position={[0, 0, -2]}>
+    <group position={[0, 0, -15]}>
       {/* Left pillar */}
       <mesh position={[-3.5, 4, 0]} castShadow material={stoneMat}>
         <boxGeometry args={[1.2, 8, 1.2]} />
@@ -44,7 +44,7 @@ export default function Archway() {
       {/* Arch crown (Torus, half visible) */}
       <mesh position={[0, 6.5, 0]}>
         <torusGeometry args={[3.2, 0.55, 8, 24, Math.PI]} />
-        <meshStandardMaterial color="#3e3e46" roughness={0.95} />
+        <meshStandardMaterial color="#8a8a94" roughness={0.95} />
       </mesh>
 
       {/* Decorative corner stones */}
@@ -60,7 +60,7 @@ export default function Archway() {
         position={[0, 9.8, 0.62]}
         fontSize={0.85}
         letterSpacing={0.08}
-        color="#00eeff"
+        color="#00ffff"
         anchorX="center"
         anchorY="middle"
         maxWidth={8}
@@ -68,9 +68,9 @@ export default function Archway() {
         {"KHUSHI'S WORLD"}
         <meshStandardMaterial
           ref={matRef}
-          color="#00eeff"
-          emissive="#00eeff"
-          emissiveIntensity={1.4}
+          color="white"
+          emissive="#00ffff"
+          emissiveIntensity={3}
           toneMapped={false}
         />
       </Text>

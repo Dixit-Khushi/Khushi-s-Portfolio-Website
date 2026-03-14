@@ -73,7 +73,9 @@ export default function WalkingCamera() {
     baseQ.setFromRotationMatrix(lookAtM)
 
     // ── 3. Free-look offset (clamped ±45°) ────────────────────
-    const targetLookX = -pointer.y * MAX_LOOK_ANGLE  // pitch
+    // pointer.y is -1 (top) to 1 (bottom).
+    // We want y=0 to be looking straight. So target pitch is simply pointer.y * MAX_LOOK_ANGLE.
+    const targetLookX = pointer.y * MAX_LOOK_ANGLE  // pitch
     const targetLookY = -pointer.x * MAX_LOOK_ANGLE  // yaw
 
     // Smooth lerp

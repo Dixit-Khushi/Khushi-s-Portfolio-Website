@@ -66,8 +66,7 @@ export default function Scene() {
         }}
       />
 
-      {/* Atmospheric fog */}
-      <fog attach="fog" args={['#060614', 10, 55]} />
+      {/* Atmospheric fog and background managed dynamically by Environment.jsx */}
 
       {/* Lighting */}
       <Environment />
