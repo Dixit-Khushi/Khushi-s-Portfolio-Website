@@ -64,6 +64,7 @@ export default function WalkingCamera() {
 
     // ── 2. Look-ahead direction ────────────────────────────────
     const ahead = ROAD_CURVE.getPoint(Math.min(t + 0.005, 1))
+    ahead.y += 1.6 // Look at eye level, not at the floor!
     const baseQ = new THREE.Quaternion()
     const lookAtM = new THREE.Matrix4().lookAt(
       camera.position,
