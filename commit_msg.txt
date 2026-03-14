@@ -1,0 +1,13 @@
+feat: Phase 1 - The Living Echo-System (The Pulse and Path)
+
+- Vite + React + R3F + Drei + Three.js + Zustand + Tailwind v3
+- CatmullRomCurve3 spline road with TubeGeometry
+- Scroll-driven WalkingCamera with head-bob + free-look (45 deg clamp)
+- Stone Archway with neon KHUSHI'S WORLD glowing text
+- 8 Ghost Orbs drifting along road curve
+- Bio-Sync Zustand store (coding/sleeping/chilling)
+- Glassmorphism BioSyncUI overlay
+- Dynamic Environment lighting: blue/purple/orange
+- Rain particle effect for sleeping mode
+- PerformanceMonitor for mobile optimization
+- Responsive FOV: 75 desktop / 90 portrait mobile
