@@ -5,3 +5,11 @@ dist/
 *.local
 .DS_Store
 Thumbs.db
+
+# Ignore GSD project
+gsd/
+gsd/*
+gsd/**/*
+
+# Ignore temp commit files
+commit_msg_*.txt
