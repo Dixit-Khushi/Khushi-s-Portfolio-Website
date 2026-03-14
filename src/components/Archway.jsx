@@ -22,22 +22,26 @@ export default function Archway() {
   const archShape = useMemo(() => {
     const shape = new THREE.Shape()
     
-    // Outer boundary (Flat giant rectangle)
-    shape.moveTo(-7, -0.5)
-    shape.lineTo(-7, 12)
-    shape.lineTo(7, 12)
-    shape.lineTo(7, -0.5)
+    // Outer boundary (Organic, bumpy wide rectangle)
+    shape.moveTo(-10, -0.5)
+    shape.lineTo(-10.2, 3)
+    shape.lineTo(-9.8, 8)
+    shape.lineTo(-10, 12)
+    shape.lineTo(10, 12)
+    shape.lineTo(9.8, 8)
+    shape.lineTo(10.2, 3)
+    shape.lineTo(10, -0.5)
     
-    // Inner boundary (Arched tunnel)
-    shape.lineTo(4, -0.5)
-    shape.lineTo(4, 5)
+    // Inner boundary (Arched tunnel, wider)
+    shape.lineTo(5.5, -0.5)
+    shape.lineTo(5.5, 5)
     // Curve top of the tunnel
-    shape.quadraticCurveTo(4, 8.5, 0, 8.5)
-    shape.quadraticCurveTo(-4, 8.5, -4, 5)
-    shape.lineTo(-4, -0.5)
+    shape.quadraticCurveTo(5.5, 8.5, 0, 8.5)
+    shape.quadraticCurveTo(-5.5, 8.5, -5.5, 5)
+    shape.lineTo(-5.5, -0.5)
     
     // Close shape
-    shape.lineTo(-7, -0.5)
+    shape.lineTo(-10, -0.5)
     
     return shape
   }, [])
@@ -71,12 +75,12 @@ export default function Archway() {
       {/* Extrude depth is 2 centered at Z=0 -> face is Z=1.0. Bevel adds 0.15 -> face is Z=1.15. Text must be at 1.16 to be visible! */}
       <Text
         position={[0, 10.2, 1.16]} 
-        fontSize={1.2}             // Larger text matching the concept art
+        fontSize={1.6}             // Larger text matching the concept art perfectly
         letterSpacing={0.06}
         color="#00ffff"
         anchorX="center"
         anchorY="middle"
-        maxWidth={10}
+        maxWidth={16}
       >
         {"KHUSHI'S WORLD"}
         <meshStandardMaterial
