@@ -32,12 +32,12 @@ const STATUS_CONFIG = {
   chilling: {
     bgColor:          '#5B6073',
     ambientColor:     '#ffffff',
-    ambientIntensity:  1.5,
-    dirColor:         '#ffaa44',
-    dirIntensity:      1.6,
+    ambientIntensity:  1.0,
+    dirColor:         '#99aabb', // Cool dusk light instead of orange
+    dirIntensity:      1.2,
     fogColor:         '#5B6073',
-    fogNear:           15,
-    fogFar:            60,
+    fogNear:           10,
+    fogFar:            50,
   },
 }
 
