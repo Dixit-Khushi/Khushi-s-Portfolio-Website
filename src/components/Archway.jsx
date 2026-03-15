@@ -63,26 +63,25 @@ export default function Archway() {
 
       {/* Glowing "KHUSHI'S WORLD" neon text */}
       {/* Positioned flush on the beveled face (depth/2 + bevel = 2.25 + 0.6 = 2.85) */}
-      <Suspense fallback={null}>
-        <Text
-          position={[0, 11.0, 3.2]} // Pushed forward to avoid any depth-fighting with the beveled face
-          fontSize={1.6}
-          letterSpacing={0.06}
-          color="#00e5ff"
-          anchorX="center"
-          anchorY="middle"
-          maxWidth={20}
-        >
-          {"KHUSHI'S WORLD"}
-          <meshStandardMaterial
-            ref={matRef}
-            color="white"
-            emissive="#00e5ff"
-            emissiveIntensity={10} // Super high for bloom
-            toneMapped={false}
-          />
-        </Text>
-      </Suspense>
+      {/* Glowing "KHUSHI'S WORLD" neon text */}
+      <Text
+        position={[0, 11.0, 3.5]} // Pushed way forward to guarantee visibility
+        fontSize={1.6}
+        letterSpacing={0.06}
+        color="#00e5ff"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={20}
+      >
+        {"KHUSHI'S WORLD"}
+        <meshStandardMaterial
+          ref={matRef}
+          color="white"
+          emissive="#00e5ff"
+          emissiveIntensity={4} // High bloom
+          toneMapped={false}
+        />
+      </Text>
 
       <pointLight position={[0, 11, 2]} intensity={4} color="#00e5ff" distance={15} />
     </group>
