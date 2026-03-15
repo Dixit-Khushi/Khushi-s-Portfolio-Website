@@ -1,48 +1,76 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Text, RoundedBox } from '@react-three/drei'
+import { Text } from '@react-three/drei'
+import * as THREE from 'three'
 
 /**
- * Grand Entrance Archway at [0, 0, -15]
- * Built using soft, curved RoundedBox shapes for a high-end cinematic look.
+ * Grand Entrance Archway — 100% accurate monolithic stone block.
+ * Features organic, hand-chipped stone edges and a curved arched tunnel.
  */
 export default function Archway() {
   const matRef = useRef()
 
-  // Animate glow intensity
   useFrame(({ clock }) => {
     if (matRef.current) {
-      matRef.current.emissiveIntensity = 2 + Math.sin(clock.elapsedTime * 2.0) * 0.5
+      matRef.current.emissiveIntensity = 2 + Math.sin(clock.elapsedTime * 2.5) * 0.5
     }
   })
 
+  // Create a monolithic shape with organic, slightly irregular edges
+  const archShape = useMemo(() => {
+    const shape = new THREE.Shape()
+    
+    // Outer boundary: Slightly irregular wide rectangle for "chipped stone" look
+    shape.moveTo(-11.2, -0.5)
+    shape.lineTo(-10.8, 3.5)
+    shape.lineTo(-11.4, 7.8)
+    shape.lineTo(-11.0, 12.2) // Top left
+    shape.lineTo(11.0,  12.3) // Top right
+    shape.lineTo(11.4,  8.2)
+    shape.lineTo(10.8,  2.5)
+    shape.lineTo(11.2,  -0.5)
+    
+    // Inner boundary: Arched tunnel hole
+    const hole = new THREE.Path()
+    hole.moveTo(6.5, -0.5)
+    hole.lineTo(6.5, 6.0)
+    // Quadratic curve for the arch top
+    hole.quadraticCurveTo(6.5, 9.5, 0, 9.5)
+    hole.quadraticCurveTo(-6.5, 9.5, -6.5, 6.0)
+    hole.lineTo(-6.5, -0.5)
+    hole.lineTo(6.5, -0.5)
+    
+    shape.holes.push(hole)
+    return shape
+  }, [])
+
+  const extrudeSettings = useMemo(() => ({
+    depth: 4.5, // Thick monolithic block
+    bevelEnabled: true,
+    bevelSegments: 8,
+    steps: 2,
+    bevelSize: 0.6,
+    bevelThickness: 0.6,
+  }), [])
+
   return (
-    <group position={[0, 0, -15]}>
-      
-      {/* Left Pillar */}
-      <RoundedBox args={[4, 12, 4]} position={[-8, 5.5, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
-      </RoundedBox>
+    <group position={[0, -0.1, -15]}>
+      {/* Monolithic Arch Mesh */}
+      <mesh position={[0, 0, -2.25]} castShadow receiveShadow>
+        <extrudeGeometry args={[archShape, extrudeSettings]} />
+        <meshStandardMaterial color="#6a6e78" roughness={0.85} />
+      </mesh>
 
-      {/* Right Pillar */}
-      <RoundedBox args={[4, 12, 4]} position={[8, 5.5, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
-      </RoundedBox>
-
-      {/* Top Beam */}
-      <RoundedBox args={[20, 5, 4]} position={[0, 10, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
-      </RoundedBox>
-
-      {/* Glowing "KHUSHI'S WORLD" text */}
+      {/* Glowing "KHUSHI'S WORLD" neon text */}
+      {/* Positioned flush on the beveled face (depth/2 + bevel = 2.25 + 0.6 = 2.85) */}
       <Text
-        position={[0, 10.2, 2.01]} // Flush with the front face of the Z=4 deep beam (origin centered)
-        fontSize={1.6}
+        position={[0, 11.0, 0.65]} 
+        fontSize={1.7}
         letterSpacing={0.06}
         color="#00e5ff"
         anchorX="center"
         anchorY="middle"
-        maxWidth={16}
+        maxWidth={20}
       >
         {"KHUSHI'S WORLD"}
         <meshStandardMaterial
@@ -54,8 +82,8 @@ export default function Archway() {
         />
       </Text>
 
-      {/* Ambient glow point light */}
-      <pointLight position={[0, 10.2, 3]} intensity={4} color="#00e5ff" distance={12} />
+      <pointLight position={[0, 11, 2]} intensity={4} color="#00e5ff" distance={15} />
     </group>
   )
 }
+

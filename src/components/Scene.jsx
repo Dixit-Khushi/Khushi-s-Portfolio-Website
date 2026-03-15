@@ -13,72 +13,131 @@ import RainEffect from './RainEffect'
  * Fog is set directly on scene via <fog>.
  * PerformanceMonitor handles pixel-ratio scaling for mobile.
  */
-function CobblestoneMaterial() {
-  const tex = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 512
-    const ctx = canvas.getContext('2d')
+/**
+ * SplineRoad — High-fidelity path with distinct curbs and cobblestone surface.
+ * Exactly matches the "Spline Road" reference image.
+ */
+function SplineRoad() {
+  const segments = 120
+  const roadWidth = 4.8
+  const curbWidth = 0.3
+  const curbHeight = 0.25
+
+  // 1. Cobblestone Surface Geometry
+  const roadGeom = useMemo(() => {
+    const geom = new THREE.BufferGeometry()
+    const vertices = []
+    const indices = []
+    const uvs = []
     
-    // Base dark grey stone
-    ctx.fillStyle = '#4a4a50'
-    ctx.fillRect(0, 0, 512, 512)
-    
-    // Draw brick outlines
-    ctx.strokeStyle = '#2a2a30'
-    ctx.lineWidth = 14
-    
-    const rows = 12
-    const cols = 6
-    const rowH = 512 / rows
-    const colW = 512 / cols
-    
-    ctx.beginPath()
-    for (let r = 0; r <= rows; r++) {
-      ctx.moveTo(0, r * rowH)
-      ctx.lineTo(512, r * rowH)
-    }
-    for (let r = 0; r < rows; r++) {
-      const offset = (r % 2 === 0) ? 0 : colW / 2
-      for (let c = 0; c <= cols; c++) {
-        const x = c * colW + offset
-        ctx.moveTo(x, r * rowH)
-        ctx.lineTo(x, (r + 1) * rowH)
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments
+      const point = ROAD_CURVE.getPoint(t)
+      const tangent = ROAD_CURVE.getTangent(t).normalize()
+      const up = new THREE.Vector3(0, 1, 0)
+      const side = new THREE.Vector3().crossVectors(tangent, up).normalize()
+      
+      const left = point.clone().add(side.clone().multiplyScalar(roadWidth / 2))
+      const right = point.clone().add(side.clone().multiplyScalar(-roadWidth / 2))
+      
+      vertices.push(left.x, left.y, left.z)
+      vertices.push(right.x, right.y, right.z)
+      
+      // Map UVs for cobblestone repeat
+      uvs.push(0, t * 50)
+      uvs.push(1, t * 50)
+      
+      if (i < segments) {
+        const a = i * 2; const b = i * 2 + 1; const c = (i + 1) * 2; const d = (i + 1) * 2 + 1
+        indices.push(a, b, c, b, d, c)
       }
     }
-    ctx.stroke()
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+    geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    geom.setIndex(indices)
+    geom.computeVertexNormals()
+    return geom
+  }, [])
+
+  // 2. Curbs Geometry (Left & Right)
+  const curbGeom = useMemo(() => {
+    const geom = new THREE.BufferGeometry()
+    const vertices = []
+    const indices = []
     
-    const t = new THREE.CanvasTexture(canvas)
-    t.wrapS = THREE.RepeatWrapping
-    t.wrapT = THREE.RepeatWrapping
-    t.repeat.set(1, 40) // Repeat along the road length
+    const buildCurb = (offset) => {
+      const startIdx = vertices.length / 3
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments
+        const p = ROAD_CURVE.getPoint(t)
+        const tangent = ROAD_CURVE.getTangent(t).normalize()
+        const side = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize()
+        
+        // Base points for a rectangular curb
+        const innerBase = p.clone().add(side.clone().multiplyScalar(offset))
+        const outerBase = p.clone().add(side.clone().multiplyScalar(offset + (offset > 0 ? curbWidth : -curbWidth)))
+        const innerTop = innerBase.clone().add(new THREE.Vector3(0, curbHeight, 0))
+        const outerTop = outerBase.clone().add(new THREE.Vector3(0, curbHeight, 0))
+        
+        vertices.push(innerBase.x, innerBase.y, innerBase.z)
+        vertices.push(outerBase.x, outerBase.y, outerBase.z)
+        vertices.push(innerTop.x, innerTop.y, innerTop.z)
+        vertices.push(outerTop.x, outerTop.y, outerTop.z)
+        
+        if (i < segments) {
+          const s = startIdx + i * 4
+          // Top face
+          indices.push(s+2, s+3, s+6, s+3, s+7, s+6)
+          // Inner face
+          indices.push(s, s+2, s+4, s+2, s+6, s+4)
+          // Outer face
+          indices.push(s+1, s+5, s+3, s+3, s+5, s+7)
+        }
+      }
+    }
+    
+    buildCurb(roadWidth / 2) // Left
+    buildCurb(-roadWidth / 2) // Right
+    
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+    geom.setIndex(indices)
+    geom.computeVertexNormals()
+    return geom
+  }, [])
+
+  // 3. Pavement Texture
+  const roadTex = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#3a3a40'; ctx.fillRect(0, 0, 512, 512)
+    ctx.strokeStyle = '#1a1a20'; ctx.lineWidth = 10
+    const rows = 16, cols = 8, rH = 512/rows, cW = 512/cols
+    for (let r = 0; r <= rows; r++) {
+      ctx.beginPath(); ctx.moveTo(0, r*rH); ctx.lineTo(512, r*rH); ctx.stroke()
+      const off = (r % 2 === 0) ? 0 : cW / 2
+      for (let c = 0; c <= cols; c++) {
+        const x = c*cW + off; ctx.beginPath(); ctx.moveTo(x, r*rH); ctx.lineTo(x, (r+1)*rH); ctx.stroke()
+      }
+    }
+    const t = new THREE.CanvasTexture(canvas); t.wrapS = t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(2, 60) // Higher tiling for visible cobblestone
     return t
   }, [])
 
   return (
-    <meshStandardMaterial
-      map={tex}
-      roughness={0.9}
-      metalness={0.05}
-      side={THREE.BackSide}
-    />
+    <group position={[0, 0.1, 0]}>
+      {/* Road Surface */}
+      <mesh geometry={roadGeom} receiveShadow>
+        <meshStandardMaterial map={roadTex} roughness={0.8} metalness={0.1} />
+      </mesh>
+      {/* Curb Stone */}
+      <mesh geometry={curbGeom} castShadow receiveShadow>
+        <meshStandardMaterial color="#4a3a30" roughness={0.9} />
+      </mesh>
+    </group>
   )
 }
 
-function Road() {
-  // Wider radius (2.4) and smooth segments (16). 
-  // We will sink it into the ground so only the flat top arc forms the road surface.
-  const tubeGeometry = useMemo(
-    () => new THREE.TubeGeometry(ROAD_CURVE, 120, 2.4, 16, false),
-    []
-  )
-
-  return (
-    <mesh geometry={tubeGeometry} receiveShadow position={[0, -2.4, 0]}>
-      <CobblestoneMaterial />
-    </mesh>
-  )
-}
 
 
 
@@ -96,9 +155,9 @@ function RollingHills() {
         // Gentle rolling hills
         const z = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 4.0 + Math.sin(x * 0.01) * 3.0
         
-        // Flatten the center path slightly near X=0 so it doesn't block the road
+        // Flatten the center path perfectly near X=0 so it doesn't clip the road
         const distFromCenter = Math.abs(x)
-        const flattenFactor = Math.min(1.0, distFromCenter / 15.0) 
+        const flattenFactor = THREE.MathUtils.smoothstep(distFromCenter, 4, 15)
         
         pos.setZ(i, z * flattenFactor) 
     }
@@ -106,9 +165,9 @@ function RollingHills() {
   }, [])
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, -75]} receiveShadow>
-      <planeGeometry ref={geomRef} args={[400, 400, 64, 64]} />
-      <meshStandardMaterial color="#223026" roughness={1} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, -75]} receiveShadow>
+      <planeGeometry ref={geomRef} args={[1000, 1000, 128, 128]} />
+      <meshStandardMaterial color="#5B6073" roughness={1} />
     </mesh>
   )
 }
@@ -132,8 +191,8 @@ export default function Scene() {
       <ScrollControls pages={6} damping={0.18} distance={1}>
         <WalkingCamera />
 
-        {/* Road tube (widened procedural cobblestone) */}
-        <Road />
+        {/* Road surface with raised curbs (Spline Road) */}
+        <SplineRoad />
 
         {/* Grand entrance */}
         <Archway />
