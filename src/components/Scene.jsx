@@ -167,7 +167,8 @@ function RollingHills() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, -75]} receiveShadow>
       <planeGeometry ref={geomRef} args={[600, 600, 64, 64]} />
-      <meshStandardMaterial color="#5B6073" roughness={1} />
+      {/* meshBasicMaterial ignores lighting, ensuring a perfect color match with the background/fog */}
+      <meshBasicMaterial color="#5B6073" />
     </mesh>
   )
 }

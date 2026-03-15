@@ -24,11 +24,11 @@ export default function Archway() {
     shape.moveTo(-11.2, -0.5)
     shape.lineTo(-10.8, 3.5)
     shape.lineTo(-11.4, 7.8)
-    shape.lineTo(-11.0, 12.2) // Top left
-    shape.lineTo(11.0,  12.3) // Top right
+    shape.lineTo(-11.0, 11.5) // Top left (lowered from 12.2)
+    shape.lineTo(11.0,  11.6) // Top right (lowered from 12.3)
     shape.lineTo(11.4,  8.2)
     shape.lineTo(10.8,  2.5)
-    shape.lineTo(11.2,  -0.5)
+    shape.lineTo(11.2, -0.5)
     
     // Inner boundary: Arched tunnel hole
     const hole = new THREE.Path()
@@ -65,8 +65,8 @@ export default function Archway() {
       {/* Positioned flush on the beveled face (depth/2 + bevel = 2.25 + 0.6 = 2.85) */}
       {/* Glowing "KHUSHI'S WORLD" neon text */}
       <Text
-        position={[0, 11.0, 3.5]} // Pushed way forward to guarantee visibility
-        fontSize={1.6}
+        position={[0, 10.3, 3.5]} // Lowered for better alignment within the stone face
+        fontSize={1.5}
         letterSpacing={0.06}
         color="#00e5ff"
         anchorX="center"
