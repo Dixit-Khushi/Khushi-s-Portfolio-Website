@@ -50,8 +50,8 @@ function GhostOrb({ index, color }) {
       <sphereGeometry args={[0.15, 10, 10]} />
       <meshStandardMaterial
         color={color}
-        emissive={color}
-        emissiveIntensity={3.5}
+        emissive="#00e5ff"
+        emissiveIntensity={2}
         toneMapped={false}
         transparent
         opacity={0.9}

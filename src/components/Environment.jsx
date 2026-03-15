@@ -30,14 +30,14 @@ const STATUS_CONFIG = {
     fogFar:            30,
   },
   chilling: {
-    bgColor:          '#3B3845',
+    bgColor:          '#5B6073',
     ambientColor:     '#ffffff',
     ambientIntensity:  1.5,
     dirColor:         '#ffaa44',
     dirIntensity:      1.6,
-    fogColor:         '#3B3845',
-    fogNear:           10,
-    fogFar:            80,
+    fogColor:         '#5B6073',
+    fogNear:           15,
+    fogFar:            60,
   },
 }
 

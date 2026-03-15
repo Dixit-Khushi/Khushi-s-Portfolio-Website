@@ -1,83 +1,45 @@
-import { useRef, useMemo } from 'react'
+import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
-import * as THREE from 'three'
+import { Text, RoundedBox } from '@react-three/drei'
 
 /**
  * Grand Entrance Archway at [0, 0, -15]
- * Built as a single monolithic stone piece using Shape & ExtrudeGeometry
- * matching "The Threshold" concept art perfectly.
+ * Built using soft, curved RoundedBox shapes for a high-end cinematic look.
  */
 export default function Archway() {
   const matRef = useRef()
 
-  // Animate glow intensity via material ref
+  // Animate glow intensity
   useFrame(({ clock }) => {
     if (matRef.current) {
-      matRef.current.emissiveIntensity = 2.5 + Math.sin(clock.elapsedTime * 2.0) * 1.0
+      matRef.current.emissiveIntensity = 2 + Math.sin(clock.elapsedTime * 2.0) * 0.5
     }
   })
-
-  // Monolithic arch shape matches "The Threshold" exactly (Flat top, arched hole)
-  const archShape = useMemo(() => {
-    const shape = new THREE.Shape()
-    
-    // Outer boundary (Organic, bumpy wide rectangle)
-    shape.moveTo(-10, -0.5)
-    shape.lineTo(-10.2, 3)
-    shape.lineTo(-9.8, 8)
-    shape.lineTo(-10, 12)
-    shape.lineTo(10, 12)
-    shape.lineTo(9.8, 8)
-    shape.lineTo(10.2, 3)
-    shape.lineTo(10, -0.5)
-    
-    // Inner boundary (Arched tunnel, wider)
-    shape.lineTo(5.5, -0.5)
-    shape.lineTo(5.5, 5)
-    // Curve top of the tunnel
-    shape.quadraticCurveTo(5.5, 8.5, 0, 8.5)
-    shape.quadraticCurveTo(-5.5, 8.5, -5.5, 5)
-    shape.lineTo(-5.5, -0.5)
-    
-    // Close shape
-    shape.lineTo(-10, -0.5)
-    
-    return shape
-  }, [])
-
-  const extrudeSettings = useMemo(() => ({
-    depth: 2.0,            // How thick the archway is (Z axis)
-    bevelEnabled: true,
-    bevelSegments: 3,
-    steps: 2,
-    bevelSize: 0.15,
-    bevelThickness: 0.15,
-  }), [])
-
-  // Stone-like material matching the dusk aesthetic
-  const stoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#6a6a74',   // Darker stone so the glow pops
-    roughness: 0.95,
-    metalness: 0.1,
-  }), [])
 
   return (
     <group position={[0, 0, -15]}>
       
-      {/* Monolithic Extruded Arch */}
-      {/* ExtrudeGeometry builds from Z=0 back to Z=depth. We want center at Z=0, so push back by -depth/2 */}
-      <mesh position={[0, 0, -1.0]} castShadow receiveShadow material={stoneMat}>
-        <extrudeGeometry args={[archShape, extrudeSettings]} />
-      </mesh>
+      {/* Left Pillar */}
+      <RoundedBox args={[4, 12, 4]} position={[-8, 5.5, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
+      </RoundedBox>
 
-      {/* Glowing "KHUSHI'S WORLD" text - engraved flush into the front face */}
-      {/* Extrude depth is 2 centered at Z=0 -> face is Z=1.0. Bevel adds 0.15 -> face is Z=1.15. Text must be at 1.16 to be visible! */}
+      {/* Right Pillar */}
+      <RoundedBox args={[4, 12, 4]} position={[8, 5.5, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
+      </RoundedBox>
+
+      {/* Top Beam */}
+      <RoundedBox args={[20, 5, 4]} position={[0, 10, 0]} radius={0.4} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color="#6a6e78" roughness={0.8} />
+      </RoundedBox>
+
+      {/* Glowing "KHUSHI'S WORLD" text */}
       <Text
-        position={[0, 10.2, 1.16]} 
-        fontSize={1.6}             // Larger text matching the concept art perfectly
+        position={[0, 10.2, 2.01]} // Flush with the front face of the Z=4 deep beam (origin centered)
+        fontSize={1.6}
         letterSpacing={0.06}
-        color="#00ffff"
+        color="#00e5ff"
         anchorX="center"
         anchorY="middle"
         maxWidth={16}
@@ -86,14 +48,14 @@ export default function Archway() {
         <meshStandardMaterial
           ref={matRef}
           color="white"
-          emissive="#00ffff"
-          emissiveIntensity={4.5}
+          emissive="#00e5ff"
+          emissiveIntensity={2}
           toneMapped={false}
         />
       </Text>
 
-      {/* Ambient glow point light to illuminate the dark stone under the text */}
-      <pointLight position={[0, 10.2, 2.5]} intensity={4} color="#00ffff" distance={12} />
+      {/* Ambient glow point light */}
+      <pointLight position={[0, 10.2, 3]} intensity={4} color="#00e5ff" distance={12} />
     </group>
   )
 }

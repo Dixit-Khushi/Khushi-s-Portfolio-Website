@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { ScrollControls, PerformanceMonitor } from '@react-three/drei'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import WalkingCamera from './WalkingCamera'
 import Archway from './Archway'
 import GhostOrbs, { ROAD_CURVE } from './GhostOrbs'
@@ -80,30 +81,7 @@ function Road() {
 }
 
 
-function RoadMarkings() {
-  // Dashed centre-line dots along the curve
-  const dots = useMemo(() => {
-    const pts = []
-    const total = 40
-    for (let i = 0; i < total; i++) {
-      const t = i / total
-      const p = ROAD_CURVE.getPoint(t)
-      pts.push(p)
-    }
-    return pts
-  }, [])
 
-  return (
-    <group>
-      {dots.map((p, i) => (
-        <mesh key={i} position={[p.x, p.y + 0.05, p.z]}>
-          <boxGeometry args={[0.1, 0.05, 0.5]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
 
 function RollingHills() {
   const geomRef = useRef()
@@ -129,7 +107,7 @@ function RollingHills() {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, -75]} receiveShadow>
-      <planeGeometry ref={geomRef} args={[200, 200, 64, 64]} />
+      <planeGeometry ref={geomRef} args={[400, 400, 64, 64]} />
       <meshStandardMaterial color="#223026" roughness={1} />
     </mesh>
   )
@@ -154,9 +132,8 @@ export default function Scene() {
       <ScrollControls pages={6} damping={0.18} distance={1}>
         <WalkingCamera />
 
-        {/* Road tube */}
+        {/* Road tube (widened procedural cobblestone) */}
         <Road />
-        <RoadMarkings />
 
         {/* Grand entrance */}
         <Archway />
@@ -167,9 +144,14 @@ export default function Scene() {
         {/* Weather: rain when sleeping */}
         <RainEffect />
 
-        {/* Rolling Green Hills */}
+        {/* Rolling Green Hills extending into fog */}
         <RollingHills />
       </ScrollControls>
+
+      {/* Cinematic Post-Processing Bloom */}
+      <EffectComposer>
+        <Bloom mipmapBlur intensity={1.5} luminanceThreshold={0.4} />
+      </EffectComposer>
     </>
   )
 }
