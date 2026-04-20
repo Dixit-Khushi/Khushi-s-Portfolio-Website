@@ -3,58 +3,62 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 /**
- * Ghost Orbs — 8 glowing spheres drifting along the road curve,
- * simulating other concurrent visitors.
+ * Ghost Orbs — 6 glowing visitor orbs drifting along Phase 1 entrance path only.
+ * ROAD_CURVE is the shared module-level singleton used by WalkingCamera too —
+ * it now spans all 4 phases (z: 0 → -165).
  */
 
-// The same curve used in Scene — defined here as a module-level singleton
-// so orbs can follow it without prop drilling.
 export const ROAD_CURVE = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(0,   0,    0),
-  new THREE.Vector3(0,   0,  -16),  // Goes straight through the archway
-  new THREE.Vector3(4,   0.5, -30),
-  new THREE.Vector3(-3,  1,   -45),
-  new THREE.Vector3(5,   0,   -65),
-  new THREE.Vector3(-4,  0.5, -85),
-  new THREE.Vector3(2,   1,  -105),
-  new THREE.Vector3(-2,  0,  -125),
-  new THREE.Vector3(0,   0,  -150),
+  // Phase 1: The Threshold (entrance, dusk)
+  new THREE.Vector3(  0,  0,    0),
+  new THREE.Vector3(  0,  0,  -18),   // straight through the stone archway
+  new THREE.Vector3(  3,  0.3, -28),
+
+  // Phase 2: Career Avenue (daytime, skills)
+  new THREE.Vector3( -3,  0.5, -40),
+  new THREE.Vector3(  5,  0,   -55),
+  new THREE.Vector3( -4,  0.5, -70),
+  new THREE.Vector3(  4,  0,   -85),
+  new THREE.Vector3( -2,  0.3, -96),
+
+  // Phase 3: The Sanctuary (night, lake)
+  new THREE.Vector3(  1,  0,  -108),
+  new THREE.Vector3( -1,  0,  -122),
+  new THREE.Vector3(  2,  0,  -135),
+
+  // Phase 4: Zero-G Café (dawn interior)
+  new THREE.Vector3(  0,  0.5,-148),
+  new THREE.Vector3(  0,  1.2,-162),
+  new THREE.Vector3(  0,  1.5,-168),
 ])
 
-const ORB_COUNT = 8
-const ORB_COLORS = [
-  '#00eeff', '#0077ff', '#aa00ff',
-  '#00ffaa', '#ff66aa', '#ffaa00',
-  '#33ffcc', '#ff44ff',
-]
+const ORB_COLORS = ['#00eeff', '#0077ff', '#aa00ff', '#00ffaa', '#ff66aa', '#ffaa00']
 
 function GhostOrb({ index, color }) {
   const meshRef = useRef()
-  // Each orb starts at a different t offset along the curve
-  const baseT = useMemo(() => (index / ORB_COUNT) * 0.7, [index])
+  // Each orb stays in Phase 1 range (t: 0 → 0.18)
+  const baseT = useMemo(() => (index / ORB_COLORS.length) * 0.14, [index])
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return
-    const t = (baseT + clock.elapsedTime * 0.012) % 1
+    const t = (baseT + clock.elapsedTime * 0.008) % 0.18
     const pos = ROAD_CURVE.getPoint(t)
-    // Gentle sine drift off to the sides
-    const driftX = Math.sin(clock.elapsedTime * 0.5 + index * 1.3) * 1.8
-    const driftY = Math.abs(Math.sin(clock.elapsedTime * 0.3 + index * 0.9)) * 1.2 + 0.4
+    const driftX = Math.sin(clock.elapsedTime * 0.5 + index * 1.3) * 1.6
+    const driftY = Math.abs(Math.sin(clock.elapsedTime * 0.3 + index * 0.9)) * 1.0 + 0.3
     meshRef.current.position.set(pos.x + driftX, pos.y + driftY, pos.z)
-    // Gentle bob
-    meshRef.current.position.y += Math.sin(clock.elapsedTime * 1.1 + index) * 0.15
+    meshRef.current.position.y += Math.sin(clock.elapsedTime * 1.1 + index) * 0.12
   })
 
   return (
     <mesh ref={meshRef}>
-      <sphereGeometry args={[0.15, 10, 10]} />
+      <sphereGeometry args={[0.14, 10, 10]} />
       <meshStandardMaterial
         color={color}
-        emissive="#00e5ff"
-        emissiveIntensity={2}
+        emissive={color}
+        emissiveIntensity={2.5}
         toneMapped={false}
         transparent
-        opacity={0.9}
+        opacity={0.88}
       />
     </mesh>
   )

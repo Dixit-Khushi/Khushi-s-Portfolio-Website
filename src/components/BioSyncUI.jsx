@@ -1,88 +1,95 @@
 import useStore from '../store/useStore'
 
-const STATUS_META = {
-  coding: {
-    emoji: '💻',
-    label: 'Coding Mode',
-    desc: 'Khushi is in the zone',
-    color: 'text-cyan-300',
-    dot: 'bg-cyan-400',
-    ring: 'shadow-cyan-500/60',
+const PHASE_META = [
+  {
+    id: 0,
+    emoji: '🏛️',
+    label: 'The Threshold',
+    desc: 'Dusk · Entrance',
+    color: '#c8a0e0',
+    dot: '#aa55ff',
   },
-  sleeping: {
-    emoji: '🌙',
-    label: 'Sleeping',
-    desc: 'Do not disturb...',
-    color: 'text-purple-300',
-    dot: 'bg-purple-500',
-    ring: 'shadow-purple-500/60',
+  {
+    id: 1,
+    emoji: '💎',
+    label: 'Career Avenue',
+    desc: 'Day · Skills & Links',
+    color: '#00e5ff',
+    dot: '#00b8d9',
   },
-  chilling: {
-    emoji: '🧡',
-    label: 'Chilling',
-    desc: 'Good vibes only',
-    color: 'text-orange-300',
-    dot: 'bg-orange-400',
-    ring: 'shadow-orange-500/60',
+  {
+    id: 2,
+    emoji: '🌊',
+    label: 'The Sanctuary',
+    desc: 'Night · Memory Lake',
+    color: '#5588ff',
+    dot: '#3366ee',
   },
-}
-
-const STATUSES = ['coding', 'sleeping', 'chilling']
+  {
+    id: 3,
+    emoji: '☕',
+    label: 'Zero-G Café',
+    desc: 'Dawn · Projects',
+    color: '#ffaa44',
+    dot: '#ff8800',
+  },
+]
 
 export default function BioSyncUI() {
-  const { khushiStatus, setStatus } = useStore()
-  const meta = STATUS_META[khushiStatus]
+  const scrollPhase = useStore(s => s.scrollPhase)
+  const meta = PHASE_META[scrollPhase] ?? PHASE_META[0]
 
   return (
-    <div className="absolute top-5 left-5 z-50 select-none">
-      {/* Main card */}
+    <div className="absolute top-5 left-5 z-50 select-none" style={{ fontFamily: "'Outfit', sans-serif" }}>
+
+      {/* ── Phase Compass Card ─────────────────────────────── */}
       <div
-        className={`glass p-4 min-w-[200px] shadow-lg ${meta.ring} transition-all duration-700`}
-        style={{ fontFamily: "'Outfit', sans-serif" }}
+        className="glass p-4 min-w-[210px] transition-all duration-700"
+        style={{ boxShadow: `0 0 24px ${meta.dot}55` }}
       >
-        {/* Header row */}
-        <div className="flex items-center gap-2 mb-1">
-          {/* Status ping dot */}
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
           <div className="relative flex h-3 w-3">
-            <span className={`status-ping absolute inline-flex h-full w-full rounded-full ${meta.dot} opacity-75`} />
-            <span className={`relative inline-flex rounded-full h-3 w-3 ${meta.dot}`} />
+            <span
+              className="status-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ background: meta.dot }}
+            />
+            <span className="relative inline-flex rounded-full h-3 w-3" style={{ background: meta.dot }} />
           </div>
-          <span className="text-white/50 text-[10px] font-semibold tracking-widest uppercase">
-            Bio-Sync
+          <span className="text-white/40 text-[10px] font-semibold tracking-widest uppercase">
+            Khushi's World
           </span>
         </div>
 
-        {/* Status */}
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-2xl">{meta.emoji}</span>
+        {/* Phase info */}
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-3xl">{meta.emoji}</span>
           <div>
-            <p className={`font-bold text-sm ${meta.color} neon-text`}>{meta.label}</p>
+            <p className="font-bold text-sm neon-text" style={{ color: meta.color }}>
+              {meta.label}
+            </p>
             <p className="text-white/40 text-[11px]">{meta.desc}</p>
           </div>
         </div>
 
-        {/* Toggle buttons */}
-        <div className="flex gap-1 mt-3">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              id={`bio-sync-${s}`}
-              onClick={() => setStatus(s)}
-              className={`
-                flex-1 text-[10px] py-1 rounded-lg font-semibold uppercase tracking-wide
-                transition-all duration-300 cursor-pointer
-                ${khushiStatus === s
-                  ? `${meta.dot} text-black shadow-md`
-                  : 'bg-white/10 text-white/50 hover:bg-white/20'}
-              `}
-            >
-              {STATUS_META[s].emoji}
-            </button>
+        {/* Phase stepper dots */}
+        <div className="flex gap-2 mt-3 items-center justify-center">
+          {PHASE_META.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-full transition-all duration-500"
+              style={{
+                width:   scrollPhase === p.id ? '20px' : '8px',
+                height:  '8px',
+                background: scrollPhase === p.id ? p.dot : '#ffffff22',
+                boxShadow: scrollPhase === p.id ? `0 0 8px ${p.dot}` : 'none',
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* Bottom hint */}
+      {/* ── Scroll hint */}
       <p className="text-white/25 text-[10px] mt-2 ml-1 tracking-wide">
         scroll ↓ to walk · drag to look
       </p>

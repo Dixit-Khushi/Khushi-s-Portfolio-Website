@@ -3,87 +3,79 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import * as THREE from 'three'
 import { ROAD_CURVE } from './GhostOrbs'
+import useStore from '../store/useStore'
 
-/**
- * WalkingCamera
- * ─────────────
- * • Moves camera along ROAD_CURVE based on scroll offset
- * • Applies sine-wave head-bob on Y axis
- * • Free-look via pointer (mouse/touch) clamped to ±45°
- */
+const MAX_LOOK_ANGLE = Math.PI / 30  // ~6°
+const BOB_AMPLITUDE  = 0.07
+const BOB_FREQUENCY  = 14
 
-const MAX_LOOK_ANGLE = Math.PI / 3  // 60 degrees for a wider, more natural free-look
-const BOB_AMPLITUDE  = 0.08
-const BOB_FREQUENCY  = 12
-
-// Pointer state shared via module-level ref (avoids React overhead)
 const pointer = { x: 0, y: 0 }
-
 function onPointerMove(e) {
-  // Normalise to -1..1
-  const touch = e.touches ? e.touches[0] : e
-  pointer.x = (touch.clientX / window.innerWidth)  * 2 - 1
-  pointer.y = (touch.clientY / window.innerHeight) * 2 - 1
+  if (e.touches) {
+    if (e.touches.length !== 2) return
+    const t = e.touches[0]
+    pointer.x = (t.clientX / window.innerWidth)  * 2 - 1
+    pointer.y = (t.clientY / window.innerHeight) * 2 - 1
+  } else {
+    pointer.x = (e.clientX / window.innerWidth)  * 2 - 1
+    pointer.y = (e.clientY / window.innerHeight) * 2 - 1
+  }
 }
+
+// Phase boundaries by scroll 0→1
+const PHASE_THRESHOLDS = [0, 0.25, 0.55, 0.80]
 
 export default function WalkingCamera() {
   const { camera, size } = useThree()
-  const scroll = useScroll()
-  const lookX  = useRef(0) // current look yaw   (around Y)
-  const lookY  = useRef(0) // current look pitch  (around X)
+  const scroll   = useScroll()
+  const lookX    = useRef(0)
+  const lookY    = useRef(0)
+  const setScrollPhase = useStore(s => s.setScrollPhase)
+  const lastPhase = useRef(-1)
 
-  // Responsive FOV: wider on portrait mobile
   useEffect(() => {
-    camera.fov = size.width < 600 ? 90 : 75
+    camera.fov = size.width < 600 ? 90 : 72
     camera.updateProjectionMatrix()
   }, [size.width, camera])
 
-  // Register pointer listeners
   useEffect(() => {
-    window.addEventListener('mousemove',  onPointerMove)
-    window.addEventListener('touchmove',  onPointerMove, { passive: true })
+    window.addEventListener('mousemove', onPointerMove)
+    window.addEventListener('touchmove', onPointerMove, { passive: true })
     return () => {
-      window.removeEventListener('mousemove',  onPointerMove)
-      window.removeEventListener('touchmove',  onPointerMove)
+      window.removeEventListener('mousemove', onPointerMove)
+      window.removeEventListener('touchmove', onPointerMove)
     }
   }, [])
 
   useFrame(() => {
-    // ── 1. Scroll → position along curve ──────────────────────
     const t = Math.min(scroll.offset, 0.9999)
+
+    // ── Broadcast current phase to UI ────────────────────────
+    let phase = 0
+    for (let i = PHASE_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (t >= PHASE_THRESHOLDS[i]) { phase = i; break }
+    }
+    if (phase !== lastPhase.current) {
+      lastPhase.current = phase
+      setScrollPhase(phase)
+    }
+
+    // ── Camera position along curve ──────────────────────────
     const curvePos = ROAD_CURVE.getPoint(t)
-
-    // Head-bob
     const bob = Math.sin(t * BOB_FREQUENCY * Math.PI) * BOB_AMPLITUDE
+    camera.position.set(curvePos.x, curvePos.y + 1.6 + bob, curvePos.z)
 
-    camera.position.set(
-      curvePos.x,
-      curvePos.y + 1.6 + bob,   // 1.6 = eye height
-      curvePos.z,
-    )
+    // ── Look-ahead direction ─────────────────────────────────
+    const aheadT = Math.min(t + 0.004, 0.9999)
+    const ahead  = ROAD_CURVE.getPoint(aheadT)
+    ahead.y += 1.6
 
-    // ── 2. Look-ahead direction ────────────────────────────────
-    const ahead = ROAD_CURVE.getPoint(Math.min(t + 0.005, 1))
-    ahead.y += 1.6 // Look at eye level, not at the floor!
-    const baseQ = new THREE.Quaternion()
-    const lookAtM = new THREE.Matrix4().lookAt(
-      camera.position,
-      ahead,
-      new THREE.Vector3(0, 1, 0),
-    )
-    baseQ.setFromRotationMatrix(lookAtM)
-
-    // ── 3. Free-look offset (clamped ±45°) ────────────────────
-    // pointer.y is -1 (top) to 1 (bottom).
-    // We want y=0 to be looking straight. So target pitch is simply pointer.y * MAX_LOOK_ANGLE.
-    const targetLookX = pointer.y * MAX_LOOK_ANGLE  // pitch
-    const targetLookY = -pointer.x * MAX_LOOK_ANGLE  // yaw
-
-    // Smooth lerp for responsive human head feel
+    // ── Free-look (mouse / touch) ────────────────────────────
+    const targetLookX =  pointer.y * MAX_LOOK_ANGLE
+    const targetLookY = -pointer.x * MAX_LOOK_ANGLE
     lookX.current += (targetLookX - lookX.current) * 0.1
     lookY.current += (targetLookY - lookY.current) * 0.1
 
-    // Apply look offsets naturally (like a human head) using YXZ order to completely prevent roll.
     camera.lookAt(ahead)
     const euler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ')
     euler.y += lookY.current
