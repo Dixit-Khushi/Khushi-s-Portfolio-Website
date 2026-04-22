@@ -9,21 +9,21 @@ const PROJECTS = [
     desc: 'Real-time hand-gesture laptop control using MediaPipe & PyAutoGUI. Detects pinch, scroll, and cursor from a webcam feed.',
     color: '#00e5ff',
     icon: '🤖',
-    link: 'https://github.com',
+    link: 'https://github.com/Dixit-Khushi',
   },
   {
     title: 'Portfolio World',
     desc: 'This immersive 3D portfolio built with React Three Fiber — a 4-phase world you walk through with scroll & mouse.',
     color: '#aa00ff',
     icon: '🌐',
-    link: 'https://github.com',
+    link: 'https://github.com/Dixit-Khushi',
   },
   {
     title: 'Flask Form Manager',
     desc: 'Full-stack form system with Flask-WTF validation, SQLAlchemy ORM, and secure environment-based secret management.',
     color: '#00ff88',
     icon: '🧪',
-    link: 'https://github.com',
+    link: 'https://github.com/Dixit-Khushi',
   },
 ]
 

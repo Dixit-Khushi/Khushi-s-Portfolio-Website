@@ -18,6 +18,9 @@ export default function SocialSignpost({ position, rotation }) {
 
   return (
     <group position={position} rotation={rotation}>
+      {/* Light to make the signpost visible in dark environments */}
+      <pointLight position={[0, 2, 2]} intensity={5} distance={10} color="#ffebcd" />
+
       {/* Wooden Pole */}
       <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[0.1, 0.1, 3, 8]} />
@@ -32,13 +35,18 @@ export default function SocialSignpost({ position, rotation }) {
         receiveShadow
         onClick={(e) => {
           e.stopPropagation();
-          window.open('https://github.com', '_blank')
+          window.open('https://github.com/Dixit-Khushi', '_blank')
         }}
         onPointerOver={(e) => handlePointerOver(e, setHoverGithub)}
         onPointerOut={(e) => handlePointerOut(e, setHoverGithub)}
       >
         <boxGeometry args={[1.5, 0.5, 0.1]} />
-        <meshStandardMaterial color={hoveredGithub ? '#5D4037' : '#4E342E'} roughness={0.8} />
+        <meshStandardMaterial 
+          color={hoveredGithub ? '#6D4C41' : '#4E342E'} 
+          emissive={hoveredGithub ? '#4a332a' : '#1a110e'}
+          emissiveIntensity={0.8}
+          roughness={0.8} 
+        />
         <Text
           position={[0, 0, 0.06]}
           fontSize={0.25}
@@ -58,13 +66,18 @@ export default function SocialSignpost({ position, rotation }) {
         receiveShadow
         onClick={(e) => {
           e.stopPropagation();
-          window.open('https://linkedin.com', '_blank')
+          window.open('https://www.linkedin.com/in/dixit-khushi', '_blank')
         }}
         onPointerOver={(e) => handlePointerOver(e, setHoverLinkedin)}
         onPointerOut={(e) => handlePointerOut(e, setHoverLinkedin)}
       >
         <boxGeometry args={[1.6, 0.5, 0.1]} />
-        <meshStandardMaterial color={hoveredLinkedin ? '#5D4037' : '#4E342E'} roughness={0.8} />
+        <meshStandardMaterial 
+          color={hoveredLinkedin ? '#6D4C41' : '#4E342E'} 
+          emissive={hoveredLinkedin ? '#4a332a' : '#1a110e'}
+          emissiveIntensity={0.8}
+          roughness={0.8} 
+        />
         <Text
           position={[0, 0, 0.06]}
           fontSize={0.25}
