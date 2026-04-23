@@ -1,93 +1,78 @@
-import { useState } from 'react'
-import { Text } from '@react-three/drei'
+import { useState, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 
-export default function SocialSignpost({ position, rotation }) {
-  const [hoveredGithub, setHoverGithub] = useState(false)
-  const [hoveredLinkedin, setHoverLinkedin] = useState(false)
+/**
+ * CanvasTexture sign label — drawn onto an HTML canvas so it's
+ * pure WebGL geometry (no Html/DOM overlay = no ScrollControls issues).
+ */
+function makeLabel(text, hovered = false) {
+  const W = 512, H = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, W, H)
+  ctx.font = 'bold 68px Arial, Helvetica, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'
+  ctx.shadowBlur = 10
+  ctx.fillStyle = hovered ? '#ffffff' : '#f5dcc8'
+  ctx.fillText(text, W / 2, H / 2)
+  return new THREE.CanvasTexture(canvas)
+}
 
-  const handlePointerOver = (e, setter) => {
-    e.stopPropagation()
-    setter(true)
-    document.body.style.cursor = 'pointer'
-  }
-  const handlePointerOut = (e, setter) => {
-    e.stopPropagation()
-    setter(false)
-    document.body.style.cursor = 'auto'
-  }
+function SignBoard({ boardWidth = 2.6, boardHeight = 0.7, label, url, tilt, boardPosition }) {
+  const [hovered, setHovered] = useState(false)
+  const texture = useMemo(() => makeLabel(label, hovered), [label, hovered])
+
+  const onOver  = (e) => { e.stopPropagation(); setHovered(true);  document.body.style.cursor = 'pointer' }
+  const onOut   = (e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'    }
+  const onPress = (e) => { e.stopPropagation(); window.open(url, '_blank', 'noopener,noreferrer') }
 
   return (
-    <group position={position} rotation={rotation}>
-      {/* Light to make the signpost visible in dark environments */}
-      <pointLight position={[0, 2, 2]} intensity={5} distance={10} color="#ffebcd" />
+    <group position={boardPosition} rotation={[0, 0, tilt]}>
+      {/* Wooden board */}
+      <mesh castShadow receiveShadow onPointerOver={onOver} onPointerOut={onOut} onPointerUp={onPress}>
+        <boxGeometry args={[boardWidth, boardHeight, 0.14]} />
+        <meshStandardMaterial color={hovered ? '#7D5C51' : '#5D3A2A'} roughness={0.85} />
+      </mesh>
+      {/* Text texture — renderOrder=999, depthTest=false → always on top */}
+      <mesh position={[0, 0, 0.08]} renderOrder={999} onPointerOver={onOver} onPointerOut={onOut} onPointerUp={onPress}>
+        <planeGeometry args={[boardWidth - 0.15, boardHeight - 0.15]} />
+        <meshBasicMaterial map={texture} transparent depthWrite={false} depthTest={false} />
+      </mesh>
+    </group>
+  )
+}
 
-      {/* Wooden Pole */}
-      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.1, 0.1, 3, 8]} />
+export default function SocialSignpost({ position, rotation }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <pointLight position={[0, 2, 1.5]} intensity={5} distance={10} color="#ffd090" />
+
+      {/* Pole */}
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.13, 3.4, 8]} />
         <meshStandardMaterial color="#3E2723" roughness={0.9} />
       </mesh>
 
-      {/* GitHub Sign */}
-      <mesh 
-        position={[0.2, 2.5, 0]} 
-        rotation={[0, 0, 0.1]} 
-        castShadow 
-        receiveShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          window.open('https://github.com/Dixit-Khushi', '_blank')
-        }}
-        onPointerOver={(e) => handlePointerOver(e, setHoverGithub)}
-        onPointerOut={(e) => handlePointerOut(e, setHoverGithub)}
-      >
-        <boxGeometry args={[1.5, 0.5, 0.1]} />
-        <meshStandardMaterial 
-          color={hoveredGithub ? '#6D4C41' : '#4E342E'} 
-          emissive={hoveredGithub ? '#4a332a' : '#1a110e'}
-          emissiveIntensity={0.8}
-          roughness={0.8} 
-        />
-        <Text
-          position={[0, 0, 0.06]}
-          fontSize={0.25}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          GitHub
-        </Text>
-      </mesh>
+      {/* GitHub — top board */}
+      <SignBoard
+        label="GitHub"
+        url="https://github.com/Dixit-Khushi"
+        tilt={0.08}
+        boardPosition={[0.15, 2.65, 0]}
+      />
 
-      {/* LinkedIn Sign */}
-      <mesh 
-        position={[-0.3, 1.8, 0]} 
-        rotation={[0, 0, -0.15]} 
-        castShadow 
-        receiveShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          window.open('https://www.linkedin.com/in/dixit-khushi', '_blank')
-        }}
-        onPointerOver={(e) => handlePointerOver(e, setHoverLinkedin)}
-        onPointerOut={(e) => handlePointerOut(e, setHoverLinkedin)}
-      >
-        <boxGeometry args={[1.6, 0.5, 0.1]} />
-        <meshStandardMaterial 
-          color={hoveredLinkedin ? '#6D4C41' : '#4E342E'} 
-          emissive={hoveredLinkedin ? '#4a332a' : '#1a110e'}
-          emissiveIntensity={0.8}
-          roughness={0.8} 
-        />
-        <Text
-          position={[0, 0, 0.06]}
-          fontSize={0.25}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          LinkedIn
-        </Text>
-      </mesh>
+      {/* LinkedIn — bottom board */}
+      <SignBoard
+        label="LinkedIn"
+        url="https://www.linkedin.com/in/dixit-khushi"
+        tilt={-0.08}
+        boardPosition={[-0.15, 1.88, 0]}
+      />
     </group>
   )
 }
