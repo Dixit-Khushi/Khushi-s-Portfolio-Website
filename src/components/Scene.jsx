@@ -12,16 +12,17 @@ import SocialSignpost from './SocialSignpost'
 import SkillsOverlay from './SkillsOverlay'
 import LakeScene from './LakeScene'
 import ZeroGCafe from './ZeroGCafe'
+import Surroundings from './Surroundings'
 
 /**
  * SplineRoad — High-fidelity cobblestone path following ROAD_CURVE.
  * Extends the full length of the 4-phase journey.
  */
 function SplineRoad() {
-  const segments = 180
+  const segments = 80
   const roadWidth = 4.8
-  const curbWidth = 0.3
-  const curbHeight = 0.25
+  const curbWidth = 0.25
+  const curbHeight = 0.10
 
   const roadGeom = useMemo(() => {
     const geom = new THREE.BufferGeometry()
@@ -34,10 +35,11 @@ function SplineRoad() {
       const left  = point.clone().add(side.clone().multiplyScalar( roadWidth / 2))
       const right = point.clone().add(side.clone().multiplyScalar(-roadWidth / 2))
       vertices.push(left.x, left.y, left.z, right.x, right.y, right.z)
-      uvs.push(0, t * 70, 1, t * 70)
+      uvs.push(0, t, 1, t)
       if (i < segments) {
         const a = i*2, b = i*2+1, c = (i+1)*2, d = (i+1)*2+1
-        indices.push(a,b,c, b,d,c)
+        // Fixed winding order: a,c,b ensures normal points UP instead of DOWN
+        indices.push(a,c,b, b,c,d)
       }
     }
     geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
@@ -79,33 +81,81 @@ function SplineRoad() {
   }, [])
 
   const roadTex = useMemo(() => {
+    const W = 512, H = 512
     const canvas = document.createElement('canvas')
-    canvas.width = 512; canvas.height = 512
+    canvas.width = W; canvas.height = H
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#3a3a40'; ctx.fillRect(0, 0, 512, 512)
-    ctx.strokeStyle = '#1a1a20'; ctx.lineWidth = 10
-    const rows = 16, cols = 8, rH = 512/rows, cW = 512/cols
-    for (let r = 0; r <= rows; r++) {
-      ctx.beginPath(); ctx.moveTo(0, r*rH); ctx.lineTo(512, r*rH); ctx.stroke()
-      const off = (r % 2 === 0) ? 0 : cW/2
-      for (let c = 0; c <= cols; c++) {
-        const x = c*cW + off
-        ctx.beginPath(); ctx.moveTo(x, r*rH); ctx.lineTo(x, (r+1)*rH); ctx.stroke()
+
+    // Dark mortar/grout between stones
+    ctx.fillStyle = '#4a4540'
+    ctx.fillRect(0, 0, W, H)
+
+    // Draw individual cobblestones in offset brick pattern
+    const sW = 36, sH = 22
+    const rows = Math.ceil(H / sH) + 2
+    const cols = Math.ceil(W / sW) + 2
+    const pad = 3
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const offsetX = (r % 2) * (sW / 2)
+        // Add pseudo-random jitter to make it look like natural irregular cobblestones
+        const seed = (r * 31 + c * 17) & 0xff
+        const jitterX = (seed % 5) - 2
+        const jitterY = ((seed * 7) % 5) - 2
+
+        const x = c * sW - offsetX + jitterX
+        const y = r * sH + jitterY
+
+        // Grey colour variations for realistic stone
+        const lBase = 40 + (seed % 22)   // 40–62 % lightness
+        const saturation = (seed % 5)    // slight tint
+        const hue = 210                  // slightly cool grey
+
+        // Stone face
+        ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lBase}%)`
+        const bx = x + pad, by = y + pad
+        const bw = sW - pad * 2, bh = sH - pad * 2
+        const rx = 4  // corner radius
+        ctx.beginPath()
+        ctx.moveTo(bx + rx, by)
+        ctx.lineTo(bx + bw - rx, by)
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + rx)
+        ctx.lineTo(bx + bw, by + bh - rx)
+        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - rx, by + bh)
+        ctx.lineTo(bx + rx, by + bh)
+        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - rx)
+        ctx.lineTo(bx, by + rx)
+        ctx.quadraticCurveTo(bx, by, bx + rx, by)
+        ctx.closePath()
+        ctx.fill()
+
+        // Top highlight
+        ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lBase + 15}%)`
+        ctx.fillRect(bx + rx, by + 1, bw - rx * 2, 3)
+
+        // Bottom shadow
+        ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lBase - 15}%)`
+        ctx.fillRect(bx + rx, by + bh - 3, bw - rx * 2, 3)
       }
     }
+
     const t = new THREE.CanvasTexture(canvas)
     t.wrapS = t.wrapT = THREE.RepeatWrapping
-    t.repeat.set(2, 80)
+    t.repeat.set(2, 18)  // 2 across road width, 18 along length = nicely sized stones
+    t.anisotropy = 16    // CRITICAL: prevents texture blurring into a solid color at grazing camera angles
+    t.colorSpace = THREE.SRGBColorSpace // Ensure correct colors
+    t.needsUpdate = true
     return t
   }, [])
 
   return (
-    <group position={[0, 0.1, 0]}>
+    <group position={[0, 0.05, 0]}>
       <mesh geometry={roadGeom} receiveShadow>
-        <meshStandardMaterial map={roadTex} roughness={0.8} metalness={0.1} />
+        <meshStandardMaterial map={roadTex} roughness={0.88} metalness={0.0} color="#ffffff" />
       </mesh>
       <mesh geometry={curbGeom} castShadow receiveShadow>
-        <meshStandardMaterial color="#4a3a30" roughness={0.9} />
+        <meshStandardMaterial color="#8a7a6a" roughness={0.95} />
       </mesh>
     </group>
   )
@@ -127,15 +177,29 @@ function RollingHills() {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, -75]} receiveShadow>
-      <planeGeometry ref={geomRef} args={[600, 600, 64, 64]} />
-      <meshBasicMaterial color="#3A5F2B" />
+      <planeGeometry ref={geomRef} args={[300, 300, 32, 32]} />
+      <meshStandardMaterial color="#4a8c34" roughness={0.95} />
     </mesh>
   )
 }
 
 /** Low-poly stylised trees along the Career Avenue */
 function TreeRow({ side = 1 }) {
-  const positions = [-28, -38, -48, -58, -68, -78]
+  // Phase 1 entrance + Phase 2 career avenue + Phase 3 approach
+  const positions = [-6, -12, -18, -28, -36, -46, -56, -66, -76, -90, -104]
+  const colors = [
+    ['#2a5a2a','#1e4a1e'], // dusk dark greens (Phase 1)
+    ['#2a5a2a','#1e4a1e'],
+    ['#2a5a2a','#1e4a1e'],
+    ['#2d6e2d','#1e5a1e'], // brighter (Phase 2)
+    ['#2d6e2d','#256025'],
+    ['#1e5a1e','#2d6e2d'],
+    ['#2d6e2d','#256025'],
+    ['#1e5a1e','#2d6e2d'],
+    ['#2d6e2d','#1e5a1e'],
+    ['#1a3d1a','#0f2d0f'], // dark night (Phase 3)
+    ['#1a3d1a','#0f2d0f'],
+  ]
   return (
     <group>
       {positions.map((z, i) => (
@@ -145,14 +209,15 @@ function TreeRow({ side = 1 }) {
             <cylinderGeometry args={[0.2, 0.28, 3, 6]} />
             <meshStandardMaterial color="#3E2010" roughness={0.9} />
           </mesh>
-          {/* Canopy — low-poly */}
+          {/* Bottom canopy */}
           <mesh position={[0, 3.8, 0]} castShadow>
             <coneGeometry args={[1.5, 3, 6]} />
-            <meshStandardMaterial color={i % 2 === 0 ? '#2d6e2d' : '#1e5a1e'} roughness={0.85} />
+            <meshStandardMaterial color={colors[i][0]} roughness={0.85} />
           </mesh>
+          {/* Top canopy */}
           <mesh position={[0, 5.2, 0]} castShadow>
             <coneGeometry args={[1.0, 2.5, 6]} />
-            <meshStandardMaterial color={i % 2 === 0 ? '#3a843a' : '#256025'} roughness={0.85} />
+            <meshStandardMaterial color={colors[i][1]} roughness={0.85} />
           </mesh>
         </group>
       ))}
@@ -167,9 +232,10 @@ export default function Scene() {
 
       <PerformanceMonitor onDecline={() => {}} />
 
-      <Environment />
-
       <ScrollControls pages={8} damping={0.18} distance={1}>
+        {/* Environment must be inside ScrollControls so useScroll() works */}
+        <Environment />
+
         <WalkingCamera />
 
         {/* ── Phase 1: THE THRESHOLD ──────────────────────── */}
@@ -183,14 +249,17 @@ export default function Scene() {
         <TreeRow side={1} />
         <TreeRow side={-1} />
 
-        <SocialSignpost position={[ 4, 0.2, -28]} rotation={[0, -0.4, 0]} />
-        <SocialSignpost position={[-4, 0.2, -42]} rotation={[0,  0.3, 0]} />
+        {/* ── Rich surroundings across all phases ─────────── */}
+        <Surroundings />
 
-        <SkillCrystal position={[ 5, 1.5, -35]} color="#00e5ff" tooltipText="Python & Machine Learning" delay={0} />
-        <SkillCrystal position={[-4, 1.5, -48]} color="#0055ff" tooltipText="C++ & Data Structures"     delay={1} />
-        <SkillCrystal position={[ 6, 1.5, -60]} color="#aa00ff" tooltipText="AI / Computer Vision"      delay={2} />
-        <SkillCrystal position={[-5, 1.5, -72]} color="#00ff55" tooltipText="React & Web Dev"           delay={3} />
-        <SkillCrystal position={[ 5, 1.5, -85]} color="#ffdd00" tooltipText="Flask & SQLAlchemy"        delay={4} />
+        <SocialSignpost position={[ 5.5, 0, -30]} rotation={[0, -0.5, 0]} />
+        <SocialSignpost position={[-5.5, 0, -44]} rotation={[0,  0.5, 0]} />
+
+        <SkillCrystal position={[ 5.5, 2.5, -35]} color="#00d8ff" iconUrl="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" delay={0} />
+        <SkillCrystal position={[-5.5, 2.5, -48]} color="#f7df1e" iconUrl="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" delay={1} />
+        <SkillCrystal position={[ 6,   2.5, -60]} color="#e34f26" iconUrl="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" delay={2} />
+        <SkillCrystal position={[-5.5, 2.5, -72]} color="#1572b6" iconUrl="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" delay={3} />
+        <SkillCrystal position={[ 5.5, 2.5, -85]} color="#339933" iconUrl="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" delay={4} />
 
         {/* ── Phase 3: THE SANCTUARY (lake, swing, bottles) ─ */}
         <LakeScene baseZ={-108} />
@@ -200,10 +269,10 @@ export default function Scene() {
 
       </ScrollControls>
 
-      {/* Cinematic Bloom */}
-      <EffectComposer>
+      {/* Cinematic Bloom — disabled to prevent WebGL shader issues */}
+      {/* <EffectComposer>
         <Bloom mipmapBlur intensity={1.8} luminanceThreshold={0.35} luminanceSmoothing={0.4} />
-      </EffectComposer>
+      </EffectComposer> */}
     </>
   )
 }

@@ -101,14 +101,28 @@ export default function Environment() {
   const ambRef = useRef()
   const dirRef = useRef()
 
+  const initialized = useRef(false)
+
   useFrame(({ scene }) => {
     if (!ambRef.current || !dirRef.current) return
 
     const raw = scroll?.offset ?? 0
     const phaseTarget = getPhaseConfig(raw)
 
-    // Smooth lerp toward target
-    const s = 0.035
+    // On first frame — set immediately, no lerp
+    if (!initialized.current) {
+      initialized.current = true
+      scene.background = new THREE.Color(phaseTarget.bgColor)
+      scene.fog = new THREE.Fog(phaseTarget.fogColor, phaseTarget.fogNear, phaseTarget.fogFar)
+      ambRef.current.color.set(phaseTarget.ambientColor)
+      ambRef.current.intensity = phaseTarget.ambientIntensity
+      dirRef.current.color.set(phaseTarget.dirColor)
+      dirRef.current.intensity = phaseTarget.dirIntensity
+      return
+    }
+
+    // Subsequent frames — smooth lerp
+    const s = 0.04
     ambRef.current.color.lerp(new THREE.Color(phaseTarget.ambientColor), s)
     ambRef.current.intensity += (phaseTarget.ambientIntensity - ambRef.current.intensity) * s
 

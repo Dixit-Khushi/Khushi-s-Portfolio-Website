@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
+import * as THREE from 'three'
 import Scene from './components/Scene'
 import BioSyncUI from './components/BioSyncUI'
 
@@ -16,13 +17,17 @@ function LoadingScreen() {
 
 export default function App() {
   return (
-    <div className="w-full h-full relative bg-black">
+    <div className="w-full h-full relative" style={{ background: '#2A1B3D' }}>
       {/* 3D Stage */}
       <Canvas
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ fov: 72, near: 0.1, far: 400, position: [0, 1.6, 0] }}
         shadows={false}
         dpr={[1, 1.5]}
+        onCreated={({ scene, gl }) => {
+          scene.background = new THREE.Color('#2A1B3D')
+          gl.setClearColor('#2A1B3D')
+        }}
       >
         <Suspense fallback={null}>
           <Scene />
@@ -39,7 +44,7 @@ export default function App() {
         Khushi's World • 4 Phases
       </div>
 
-      {/* Scroll hint arrow (fades after interaction) */}
+      {/* Scroll hint arrow */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none select-none opacity-60 animate-bounce">
         <span className="text-white/40 text-[11px] tracking-widest uppercase">scroll</span>
         <span className="text-white/40 text-lg">↓</span>
